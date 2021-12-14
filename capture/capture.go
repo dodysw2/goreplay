@@ -88,6 +88,7 @@ const (
 	EnginePcapFile
 	EngineRawSocket
 	EngineAFPacket
+	EngineVXLAN
 )
 
 // Set is here so that EngineType can implement flag.Var
@@ -101,6 +102,8 @@ func (eng *EngineType) Set(v string) error {
 		*eng = EngineRawSocket
 	case "af_packet":
 		*eng = EngineAFPacket
+	case "vxlan":
+		*eng = EngineVXLAN
 	default:
 		return fmt.Errorf("invalid engine %s", v)
 	}
@@ -117,6 +120,8 @@ func (eng *EngineType) String() (e string) {
 		e = "raw_socket"
 	case EngineAFPacket:
 		e = "af_packet"
+	case EngineVXLAN:
+		e = "vxlan"
 	default:
 		e = ""
 	}
@@ -162,6 +167,10 @@ func NewListener(host string, ports []uint16, transport string, engine EngineTyp
 	case EnginePcapFile:
 		l.Engine = EnginePcapFile
 		l.Activate = l.activatePcapFile
+		return
+	case EngineVXLAN:
+		l.Engine = EngineVXLAN
+		l.Activate = l.activateVxLanSocket
 		return
 	}
 
@@ -479,6 +488,18 @@ func (l *Listener) activatePcap() error {
 	if len(l.Handles) == 0 {
 		return fmt.Errorf("pcap handles error:%s", msg)
 	}
+	return nil
+}
+
+func (l *Listener) activateVxLanSocket() error {
+	handler, err := newVXLANHandler()
+	if err != nil {
+		return err
+	}
+	l.Handles["vxlan"] = packetHandle{
+		handler: handler,
+	}
+
 	return nil
 }
 
