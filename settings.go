@@ -176,6 +176,8 @@ func init() {
 	flag.BoolVar(&Settings.InputRAWConfig.TrackResponse, "input-raw-track-response", false, "If turned on Gor will track responses in addition to requests, and they will be available to middleware and file output.")
 	flag.IntVar(&Settings.InputRAWConfig.VXLANPort, "input-raw-vxlan-port", 4789, "VXLAN port. Can be used only when engine set to `vxlan`. Default: 4789")
 	flag.Var(&MultiIntOption{&Settings.InputRAWConfig.VXLANVNIs}, "input-raw-vxlan-vni", "VXLAN VNI to capture. By default capture all VNIs. Ignore VNI by setting them with minus sign, example: `--input-raw-vxlan-vni -2`")
+	flag.BoolVar(&Settings.InputRAWConfig.VLAN, "input-raw-vlan", false, "Enable VLAN (802.1Q) support")
+	flag.Var(&MultiIntOption{&Settings.InputRAWConfig.VLANVIDs}, "input-raw-vlan-vid", "VLAN VID to capture. By default capture all VIDs")
 	flag.Var(&Settings.InputRAWConfig.Engine, "input-raw-engine", "Intercept traffic using `libpcap` (default), `raw_socket`, `pcap_file`, `vxlan`")
 	flag.Var(&Settings.InputRAWConfig.Protocol, "input-raw-protocol", "Specify application protocol of intercepted traffic. Possible values: http, binary")
 	flag.StringVar(&Settings.InputRAWConfig.RealIPHeader, "input-raw-realip-header", "", "If not blank, injects header with given name and real IP value to the request payload. Usually this header should be named: X-Real-IP")

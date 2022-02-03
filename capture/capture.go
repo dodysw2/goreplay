@@ -51,6 +51,8 @@ type PcapOptions struct {
 	Engine          EngineType      `json:"input-raw-engine"`
 	VXLANPort       int             `json:"input-raw-vxlan-port"`
 	VXLANVNIs       []int           `json:"input-raw-vxlan-vni"`
+	VLAN            bool            `json:"input-raw-vlan"`
+	VLANVIDs        []int           `json:"input-raw-vlan-vid"`
 	Expire          time.Duration   `json:"input-raw-expire"`
 	TrackResponse   bool            `json:"input-raw-track-response"`
 	Protocol        tcp.TCPProtocol `json:"input-raw-protocol"`
@@ -235,6 +237,16 @@ func (l *Listener) Filter(ifi pcap.Interface) (filter string) {
 		filter = fmt.Sprintf("%s or %s", filter, responseFilter)
 	}
 
+	if l.config.VLAN {
+		if len(l.config.VLANVIDs) > 0 {
+			for _, vi := range l.config.VLANVIDs {
+				filter = fmt.Sprintf("vlan %d and ", vi) + filter
+			}
+		} else {
+			filter = "vlan and " + filter
+		}
+	}
+
 	return
 }
 
@@ -373,7 +385,7 @@ func (l *Listener) read() {
 			linkType := int(layers.LinkTypeEthernet)
 			if _, ok := hndl.handler.(*pcap.Handle); ok {
 				linkType = int(hndl.handler.(*pcap.Handle).LinkType())
-				linkSize, ok = pcapLinkTypeLength(linkType)
+				linkSize, ok = pcapLinkTypeLength(linkType, l.config.VLAN)
 				if !ok {
 					if os.Getenv("GORDEBUG") != "0" {
 						log.Printf("can not identify link type of an interface '%s'\n", key)
@@ -692,10 +704,14 @@ func hostsFilter(direction string, hosts []string) string {
 	return strings.Join(hostsFilters, " or ")
 }
 
-func pcapLinkTypeLength(lType int) (int, bool) {
+func pcapLinkTypeLength(lType int, vlan bool) (int, bool) {
 	switch layers.LinkType(lType) {
 	case layers.LinkTypeEthernet:
-		return 14, true
+		if vlan {
+			return 18, true
+		} else {
+			return 14, true
+		}
 	case layers.LinkTypeNull, layers.LinkTypeLoop:
 		return 4, true
 	case layers.LinkTypeRaw, 12, 14:
