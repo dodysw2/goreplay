@@ -56,31 +56,32 @@ func (v *vxlanHandle) reader() {
 		ci.CaptureLength = length
 		ci.Length = length
 
-		if len(v.vnis) > 0 {
-			allow := false
-			if layer := packet.Layer(layers.LayerTypeVXLAN); layer != nil {
-				vxlan, _ := layer.(*layers.VXLAN)
-
-				for _, vn := range v.vnis {
-					if vn > 0 && int(vxlan.VNI) == vn {
-						allow = true
-						break
-					}
-
-					if vn < 0 && int(vxlan.VNI) != -vn {
-						allow = true
-						break
-					}
-				}
-			}
-
-			if !allow {
-				continue
-			}
+		if len(v.vnis) > 0 && !v.vniIsAllowed(packet) {
+			continue
 		}
 
 		v.packetChannel <- packet
 	}
+}
+
+func (v *vxlanHandle) vniIsAllowed(packet gopacket.Packet) bool {
+	defaultState := false
+	if layer := packet.Layer(layers.LayerTypeVXLAN); layer != nil {
+		vxlan, _ := layer.(*layers.VXLAN)
+		for _, vn := range v.vnis {
+			if vn > 0 && int(vxlan.VNI) == vn {
+				return true
+			}
+
+			if vn < 0 {
+				if int(vxlan.VNI) == -vn {
+					return false
+				}
+				defaultState = true
+			}
+		}
+	}
+	return defaultState
 }
 
 func (v *vxlanHandle) ReadPacketData() ([]byte, gopacket.CaptureInfo, error) {
