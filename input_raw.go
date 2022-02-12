@@ -87,7 +87,7 @@ func NewRAWInput(address string, config RAWInputConfig) (i *RAWInput) {
 	return
 }
 
-// PluginRead reads meassage from this plugin
+// PluginRead reads message from this plugin
 func (i *RAWInput) PluginRead() (*Message, error) {
 	var msgTCP *tcp.Message
 	var msg Message

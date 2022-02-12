@@ -161,7 +161,7 @@ func (p *ESPlugin) ResponseAnalyze(req, resp []byte, start, stop time.Time) {
 	if err != nil {
 		Debug(0, "[ELASTIC-RESPONSE]", err)
 	} else {
-		p.indexor.Index(p.Index, "RequestResponse", "", "", "", &t, j)
+		p.indexor.Index(p.Index, "_doc", "", "", "", nil, j)
 	}
 	return
 }

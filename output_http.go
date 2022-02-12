@@ -212,6 +212,7 @@ func (o *HTTPOutput) PluginRead() (*Message, error) {
 }
 
 func (o *HTTPOutput) sendRequest(client *HTTPClient, msg *Message) {
+	Debug(1, fmt.Sprintf("[sendRequest] %q", msg))
 	if !isRequestPayload(msg.Meta) {
 		return
 	}
@@ -234,6 +235,7 @@ func (o *HTTPOutput) sendRequest(client *HTTPClient, msg *Message) {
 	}
 
 	if o.elasticSearch != nil {
+		Debug(1, fmt.Sprintf("[ES-OUTPUT]: %q", msg.Data))
 		o.elasticSearch.ResponseAnalyze(msg.Data, resp, start, stop)
 	}
 }
